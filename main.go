@@ -34,7 +34,7 @@ func (c inputCleaner) Read(p []byte) (n int, err error) {
 }
 
 func isUnwantedControlChar(b byte) bool {
-	return (b != '\t' && b != '\r' && b != '\n' && b < 32) || (b > 126 && b < 160)
+	return b != '\t' && b != '\r' && b != '\n' && b < 32
 }
 
 func main() {
