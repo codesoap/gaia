@@ -9,17 +9,9 @@ import (
 	"net/url"
 	"os"
 	"strings"
-)
 
-/*
-- Read header line. If MIME != text/* or encoding is not UTF-8: do something else
-- gmi is handled by the browser itself.
-- text is viewn in less?!
-- Read the tcp input into a buffer until \n is received.
-	- Discard \r if directly before \n.
-	- Replace control bytes by '�'.
-	- Limit buffer to 10k?!
-*/
+	"github.com/codesoap/vega/gmi"
+)
 
 type inputCleaner struct {
 	io.ReadCloser
@@ -75,9 +67,12 @@ func open(u *url.URL) error {
 	case "1":
 		return fmt.Errorf("TODO: implement INPUT")
 	case "2":
-		// TODO: io.LimitedReader
-		if _, err = io.Copy(os.Stdout, conn); err != nil {
+		page, err := gmi.ParsePage(scanner)
+		if err != nil {
 			return err
+		}
+		for _, l := range page {
+			println(l.String())
 		}
 	case "3":
 		return fmt.Errorf("TODO: implement REDIRECT")

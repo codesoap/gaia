@@ -1,10 +1,10 @@
 package gmi
 
 import (
-	"regexp"
+	"bufio"
 	"fmt"
-	"io"
 	"net/url"
+	"regexp"
 )
 
 // FIXME: The specification does not really say whether trailing spaces
@@ -13,9 +13,43 @@ var linkLineRegexp = regexp.MustCompile(`^=>[ \t]*([^ \t]+)(?:$|[ \t]+([^ \t].*)
 
 type Page []Line
 
-func NewPage(io.Reader) (Page, error) {
-	// TODO: Parse
-	return Page{}, nil
+func ParsePage(s *bufio.Scanner) (Page, error) {
+	// TODO: Remove tabs on non-preformatted?!
+	p := Page{}
+	for s.Scan() {
+		raw := s.Text()
+		switch {
+		case len(raw) >= 2 && raw[:2] == "=>":
+			l, err := NewLinkLine(raw)
+			if err != nil {
+				return p, err
+			}
+			p = append(p, l)
+		case len(raw) >= 3 && raw[:3] == "```":
+			for s.Scan() {
+				raw := s.Text()
+				if len(raw) >= 3 && raw[:3] == "```" {
+					break
+				}
+				p = append(p, PreformattedLine{raw})
+			}
+			if s.Err() != nil {
+				return p, s.Err()
+			}
+		case len(raw) >= 1 && raw[:1] == "#":
+			if len(raw) >= 4 && raw[:4] == "####" {
+				return p, fmt.Errorf("encountered heading with more than three '#'")
+			}
+			p = append(p, HeadingLine{raw})
+		case len(raw) >= 2 && raw[:2] == "* ":
+			p = append(p, ListLine{raw})
+		case len(raw) >= 1 && raw[:1] == ">":
+			p = append(p, QuoteLine{raw})
+		default:
+			p = append(p, TextLine{raw})
+		}
+	}
+	return p, s.Err()
 }
 
 type Line interface {
@@ -26,16 +60,12 @@ type TextLine struct {
 	raw string
 }
 
-func NewTextLine(raw string) TextLine {
-	return TextLine{raw}
-}
-
 func (t TextLine) String() string {
 	return t.raw
 }
 
 type LinkLine struct {
-	url *url.URL
+	url  *url.URL
 	name string
 }
 
@@ -53,7 +83,7 @@ func (l LinkLine) String() string {
 		return l.url.String()
 	}
 	if l.url.Scheme != "" && l.url.Scheme != "gemini" {
-		return fmt.Sprintf("%s (%s)", l.name, l.url.Scheme)
+		return fmt.Sprintf("=> %s (%s)", l.name, l.url.Scheme)
 	}
 	return l.name
 }
@@ -66,27 +96,11 @@ func (p PreformattedLine) String() string {
 	return p.raw
 }
 
-type H1Line struct {
+type HeadingLine struct {
 	raw string
 }
 
-func (h H1Line) String() string {
-	return h.raw
-}
-
-type H2Line struct {
-	raw string
-}
-
-func (h H2Line) String() string {
-	return h.raw
-}
-
-type H3Line struct {
-	raw string
-}
-
-func (h H3Line) String() string {
+func (h HeadingLine) String() string {
 	return h.raw
 }
 
