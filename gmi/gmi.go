@@ -56,14 +56,6 @@ type Line interface {
 	String() string // Returns a human readable representation of the line.
 }
 
-type TextLine struct {
-	raw string
-}
-
-func (t TextLine) String() string {
-	return t.raw
-}
-
 type LinkLine struct {
 	url  *url.URL
 	name string
@@ -83,39 +75,19 @@ func (l LinkLine) String() string {
 		return l.url.String()
 	}
 	if l.url.Scheme != "" && l.url.Scheme != "gemini" {
-		return fmt.Sprintf("=> %s (%s)", l.name, l.url.Scheme)
+		return fmt.Sprintf("=> [%s] %s", l.url.Scheme, l.name)
 	}
 	return l.name
 }
 
-type PreformattedLine struct {
-	raw string
-}
+type TextLine struct{ raw string }
+type PreformattedLine struct{ raw string }
+type HeadingLine struct{ raw string }
+type ListLine struct{ raw string }
+type QuoteLine struct{ raw string }
 
-func (p PreformattedLine) String() string {
-	return p.raw
-}
-
-type HeadingLine struct {
-	raw string
-}
-
-func (h HeadingLine) String() string {
-	return h.raw
-}
-
-type ListLine struct {
-	raw string
-}
-
-func (l ListLine) String() string {
-	return l.raw
-}
-
-type QuoteLine struct {
-	raw string
-}
-
-func (q QuoteLine) String() string {
-	return q.raw
-}
+func (t TextLine) String() string         { return t.raw }
+func (q QuoteLine) String() string        { return q.raw }
+func (p PreformattedLine) String() string { return p.raw }
+func (h HeadingLine) String() string      { return h.raw }
+func (l ListLine) String() string         { return l.raw }
