@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"io"
 	"net/url"
 	"os"
+	"strings"
 )
 
 /*
@@ -19,26 +21,89 @@ import (
 	- Limit buffer to 10k?!
 */
 
+type inputCleaner struct {
+	io.ReadCloser
+}
+
+func (c inputCleaner) Read(p []byte) (n int, err error) {
+	// Replacing with '�' instead of '?' would be nice, but woud be a lot
+	// more complicated, since '�' consists of two bytes.
+
+	origP := make([]byte, len(p))
+	n, err = c.ReadCloser.Read(origP)
+	for i := 0; i < n; i++ {
+		if isUnwantedControlChar(origP[i]) {
+			p[i] = '?'
+		} else {
+			p[i] = origP[i]
+		}
+	}
+	return
+}
+
+func isUnwantedControlChar(b byte) bool {
+	return (b != '\t' && b != '\r' && b != '\n' && b < 32) || (b > 126 && b < 160)
+}
+
 func main() {
 	u, err := getURL()
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "Could not get URL: %v\n", err)
+		os.Exit(1)
 	}
+	if err = open(u); err != nil {
+		fmt.Fprintf(os.Stderr, "Could not open URL: %v\n", err)
+		os.Exit(2)
+	}
+}
+
+func open(u *url.URL) error {
+	conn, err := get(u)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	scanner := bufio.NewScanner(conn)
+	if !scanner.Scan() {
+		return fmt.Errorf("could not read header")
+	}
+	headerSplit := strings.SplitN(scanner.Text(), " ", 2)
+	if len(headerSplit) != 2 || len(headerSplit[0]) != 2 || headerSplit[1] == "" {
+		return fmt.Errorf("invalid header")
+	}
+	switch headerSplit[0][:1] {
+	case "1":
+		return fmt.Errorf("TODO: implement INPUT")
+	case "2":
+		// TODO: io.LimitedReader
+		if _, err = io.Copy(os.Stdout, conn); err != nil {
+			return err
+		}
+	case "3":
+		return fmt.Errorf("TODO: implement REDIRECT")
+	case "4":
+		return fmt.Errorf("TODO: implement TMP FAIL")
+	case "5":
+		return fmt.Errorf("TODO: implement PERM FAIL")
+	case "6":
+		return fmt.Errorf("TODO: implement CERT REQUIRED")
+	}
+	return nil
+}
+
+func get(u *url.URL) (io.ReadCloser, error) {
 	conf := &tls.Config{
 		InsecureSkipVerify:    true,
 		VerifyPeerCertificate: verifyServersCert,
 	}
-	conn, err := tls.Dial("tcp", u.Host+":1965", conf)
+	conn, err := tls.Dial("tcp", u.Host, conf)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	defer conn.Close()
 	if _, err = conn.Write([]byte(u.String() + "\r\n")); err != nil {
-		panic(err)
+		conn.Close()
 	}
-	if _, err = io.Copy(os.Stdout, conn); err != nil {
-		panic(err)
-	}
+	return inputCleaner{conn}, err
 }
 
 func getURL() (*url.URL, error) {
@@ -58,6 +123,9 @@ func getURL() (*url.URL, error) {
 		u.Scheme = "gemini"
 	} else if u.Scheme != "gemini" {
 		return &url.URL{}, fmt.Errorf("not a gemini URL")
+	}
+	if u.Port() == "" {
+		u.Host += ":1965"
 	}
 	return u, nil
 }
