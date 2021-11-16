@@ -129,7 +129,6 @@ func verifyServersCert(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) 
 	for _, rawCert := range rawCerts {
 		cert, err := x509.ParseCertificate(rawCert)
 		if err != nil {
-			// TODO: Think about this not being a reason to quit.
 			return err
 		}
 		fmt.Println("NotBefore         :", cert.NotBefore.String())

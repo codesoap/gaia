@@ -36,11 +36,12 @@ func ParsePage(s *bufio.Scanner) (Page, error) {
 			if s.Err() != nil {
 				return p, s.Err()
 			}
-		case len(raw) >= 1 && raw[:1] == "#":
-			if len(raw) >= 4 && raw[:4] == "####" {
-				return p, fmt.Errorf("encountered heading with more than three '#'")
-			}
-			p = append(p, HeadingLine{raw})
+		case len(raw) >= 2 && raw[:2] == "# ":
+			p = append(p, H1Line{raw})
+		case len(raw) >= 3 && raw[:3] == "## ":
+			p = append(p, H2Line{raw})
+		case len(raw) >= 4 && raw[:4] == "### ":
+			p = append(p, H3Line{raw})
 		case len(raw) >= 2 && raw[:2] == "* ":
 			p = append(p, ListLine{raw})
 		case len(raw) >= 1 && raw[:1] == ">":
@@ -82,12 +83,16 @@ func (l LinkLine) String() string {
 
 type TextLine struct{ raw string }
 type PreformattedLine struct{ raw string }
-type HeadingLine struct{ raw string }
+type H1Line struct{ raw string }
+type H2Line struct{ raw string }
+type H3Line struct{ raw string }
 type ListLine struct{ raw string }
 type QuoteLine struct{ raw string }
 
 func (t TextLine) String() string         { return t.raw }
 func (q QuoteLine) String() string        { return q.raw }
 func (p PreformattedLine) String() string { return p.raw }
-func (h HeadingLine) String() string      { return h.raw }
+func (h H1Line) String() string           { return h.raw }
+func (h H2Line) String() string           { return h.raw }
+func (h H3Line) String() string           { return h.raw }
 func (l ListLine) String() string         { return l.raw }
