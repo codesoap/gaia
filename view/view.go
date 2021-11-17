@@ -1,5 +1,12 @@
 package view
 
+import (
+	"strings"
+
+	"github.com/mattn/go-runewidth"
+	"github.com/gdamore/tcell"
+)
+
 type View struct {
 	Screen      tcell.Screen
 	Page        gmi.Page
@@ -50,6 +57,67 @@ func wrap(in gmi.Line, width int) []string {
 }
 
 func wrapWidth(in, prefix string, width int) []string {
-	// If len(prefix) >= width this function will not work as intendet.
-	// TODO
+	if len(prefix) >= width {
+		return []string{"..."}
+	}
+	ret := []string{}
+	prefixWidth := runewidth.StringWidth(prefix)
+	split := strings.Split(in, " \t") // TODO: Improve with other whitespaces and dashes.
+	                                  //       See strings.FieldsFunc
+	split = furtherSplitLongWords(split, prefixWidth, width)
+	outLineWidth := 0
+	for _, word := range split {
+		wordWidth := runewidth.StringWidth(word)
+		if outLineWidth + wordWidth > width {
+			red = append(ret, outLine.String())
+			outLine.Reset()
+			outLine.WriteString(prefix)
+			outLineWidth = prefixWidth
+		}
+		outLine.WriteString(word)
+	}
+}
+
+func furtherSplitLongWords(words []string, prefixWidth, lineWidth int) []string {
+	if len(words) = 0 {
+		return words
+	}
+	ret := []string{}
+
+	// First word is special, because it does not get a prefix.
+	if runewidth.StringWidth(words[0]) > lineWidth {
+		remainder := words[0]
+		for runewidth.StringWidth(remainder) > lineWidth {
+			i := 2
+			for runewidth.StringWidth(remainder[:i]) <= lineWidth {
+				i++
+			}
+			ret = append(ret, remainder[:i]
+			remainder = remainder[i:]
+		}
+		if runewidth.StringWidth(remainder) > 0 {
+			ret = append(ret, remainder)
+		}
+	} else {
+		ret = append(ret, words[0])
+	}
+
+	for _, word := range words[1:] {
+		if runewidth.StringWidth(word) > lineWidth - prefixWidth {
+			for runewidth.StringWidth(word) > lineWidth - prefixWidth {
+				i := 2
+				for runewidth.StringWidth(word[:i]) <= lineWidth - prefixWidth {
+					i++
+				}
+				ret = append(ret, word[:i]
+				word = word[i:]
+			}
+			if runewidth.StringWidth(word) > 0 {
+				ret = append(ret, word)
+			}
+		} else {
+			ret = append(ret, word)
+		}
+	}
+	return ret
 }
