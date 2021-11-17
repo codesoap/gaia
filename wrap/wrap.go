@@ -18,13 +18,13 @@ func WrapWithPrefix(in, prefix string, width int) []string {
 	if prefixWidth >= width {
 		return []string{"..."}
 	}
-	lines := Wrap(in, width - prefixWidth) // FIXME
+	lines := Wrap(in, width-prefixWidth)
 	if prefixWidth == 0 {
 		return lines
 	}
 	prefixedLines := make([]string, 0, len(lines))
 	for _, line := range lines {
-		prefixedLines = append(prefixedLines, prefix + line)
+		prefixedLines = append(prefixedLines, prefix+line)
 	}
 	return prefixedLines
 }
@@ -41,7 +41,7 @@ func Wrap(in string, width int) []string {
 	outLineWidth := 0
 	for _, word := range split {
 		wordWidth := runewidth.StringWidth(word)
-		if outLineWidth + wordWidth <= width {
+		if outLineWidth+wordWidth <= width {
 			outLine = append(outLine, word)
 			outLineWidth += 1 + wordWidth // 1 for the space.
 		} else {

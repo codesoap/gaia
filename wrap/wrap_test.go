@@ -8,9 +8,9 @@ import (
 
 func TestWrap(t *testing.T) {
 	type test struct {
-		in          string
-		lineWidth   int
-		wantedOut   []string
+		in        string
+		lineWidth int
+		wantedOut []string
 	}
 	tests := []test{
 		{"foo", 8, []string{"foo"}},
@@ -31,9 +31,9 @@ func TestWrap(t *testing.T) {
 
 func TestWrapWithPrefix(t *testing.T) {
 	type test struct {
-		in          string
-		lineWidth   int
-		wantedOut   []string
+		in        string
+		lineWidth int
+		wantedOut []string
 	}
 	tests := []test{
 		{"foo", 8, []string{"> foo"}},

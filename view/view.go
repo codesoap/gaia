@@ -3,8 +3,8 @@ package view
 import (
 	"strings"
 
-	"github.com/mattn/go-runewidth"
 	"github.com/gdamore/tcell"
+	"github.com/mattn/go-runewidth"
 )
 
 type View struct {

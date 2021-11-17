@@ -8,9 +8,9 @@ import (
 
 func TestFurtherSplitLongWords(t *testing.T) {
 	type test struct {
-		in          []string
-		lineWidth   int
-		wantedOut   []string
+		in        []string
+		lineWidth int
+		wantedOut []string
 	}
 	tests := []test{
 		{[]string{"foo"}, 8, []string{"foo"}},
