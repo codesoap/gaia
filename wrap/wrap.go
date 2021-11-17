@@ -29,6 +29,33 @@ func WrapWithPrefix(in, prefix string, width int) []string {
 	return prefixedLines
 }
 
+// WrapWithPrefixAndIndent wraps in so that none of the returned lines
+// are longer than width. prefix is added to the front of the first
+// returned line and as many spaces as prefix is wide to the rest of the
+// lines. It will be attempted to break lines on whitespaces.
+//
+// All space runes will be replaced by 0x20 in the process.
+func WrapWithPrefixAndIndent(in, prefix string, width int) []string {
+	prefixWidth := runewidth.StringWidth(prefix)
+	if prefixWidth >= width {
+		return []string{"..."}
+	}
+	indent := strings.Repeat(" ", prefixWidth)
+	lines := Wrap(in, width-prefixWidth)
+	if prefixWidth == 0 {
+		return lines
+	}
+	prefixedLines := make([]string, 0, len(lines))
+	for i, line := range lines {
+		if i == 0 {
+			prefixedLines = append(prefixedLines, prefix+line)
+		} else {
+			prefixedLines = append(prefixedLines, indent+line)
+		}
+	}
+	return prefixedLines
+}
+
 // Wrap wraps in so that none of the returned lines are longer than
 // width. It will be attempted to break lines on whitespaces.
 //

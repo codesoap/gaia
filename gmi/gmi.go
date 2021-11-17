@@ -20,7 +20,7 @@ func ParsePage(s *bufio.Scanner) (Page, error) {
 		raw := s.Text()
 		switch {
 		case len(raw) >= 2 && raw[:2] == "=>":
-			l, err := NewLinkLine(raw)
+			l, err := NewLinkLine(raw[2:])
 			if err != nil {
 				return p, err
 			}
@@ -37,15 +37,15 @@ func ParsePage(s *bufio.Scanner) (Page, error) {
 				return p, s.Err()
 			}
 		case len(raw) >= 2 && raw[:2] == "# ":
-			p = append(p, H1Line{raw})
+			p = append(p, H1Line{raw[2:]})
 		case len(raw) >= 3 && raw[:3] == "## ":
-			p = append(p, H2Line{raw})
+			p = append(p, H2Line{raw[3:]})
 		case len(raw) >= 4 && raw[:4] == "### ":
-			p = append(p, H3Line{raw})
+			p = append(p, H3Line{raw[4:]})
 		case len(raw) >= 2 && raw[:2] == "* ":
-			p = append(p, ListLine{raw})
+			p = append(p, ListLine{raw[2:]})
 		case len(raw) >= 1 && raw[:1] == ">":
-			p = append(p, QuoteLine{raw})
+			p = append(p, QuoteLine{raw[1:]})
 		default:
 			p = append(p, TextLine{raw})
 		}

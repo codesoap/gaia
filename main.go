@@ -9,8 +9,12 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/codesoap/gaia/gmi"
+	"github.com/codesoap/gaia/view"
+	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v2/encoding"
 )
 
 type inputCleaner struct {
@@ -67,13 +71,19 @@ func open(u *url.URL) error {
 	case "1":
 		return fmt.Errorf("TODO: implement INPUT")
 	case "2":
-		page, err := gmi.ParsePage(scanner)
+		encoding.Register()
+		screen, err := tcell.NewScreen()
 		if err != nil {
 			return err
 		}
-		for _, l := range page {
-			println(l.String())
+		if err = screen.Init(); err != nil {
+			return err
 		}
+		page, err := gmi.ParsePage(scanner)
+		v := view.View{screen, page, 3}
+		v.Draw()
+		time.Sleep(5_000_000_000)
+		screen.Fini()
 	case "3":
 		return fmt.Errorf("TODO: implement REDIRECT")
 	case "4":
