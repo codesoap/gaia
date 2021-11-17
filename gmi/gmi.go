@@ -14,7 +14,6 @@ var linkLineRegexp = regexp.MustCompile(`^=>[ \t]*([^ \t]+)(?:$|[ \t]+([^ \t].*)
 type Page []Line
 
 func ParsePage(s *bufio.Scanner) (Page, error) {
-	// TODO: Remove tabs on non-preformatted?!
 	p := Page{}
 	for s.Scan() {
 		raw := s.Text()

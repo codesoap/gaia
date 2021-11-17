@@ -13,6 +13,7 @@ func TestWrap(t *testing.T) {
 		wantedOut []string
 	}
 	tests := []test{
+		{"", 8, []string{""}},
 		{"foo", 8, []string{"foo"}},
 		{"foo", 4, []string{"foo"}},
 		{"foo", 2, []string{"fo", "o"}},

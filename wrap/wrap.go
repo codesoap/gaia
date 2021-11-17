@@ -80,6 +80,10 @@ func Wrap(in string, width int) []string {
 	if len(outLine) > 0 {
 		ret = append(ret, strings.Join(outLine, " "))
 	}
+	if len(ret) == 0 {
+		// Preserve empty lines.
+		ret = append(ret, "")
+	}
 	return ret
 }
 
