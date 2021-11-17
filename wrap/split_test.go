@@ -15,13 +15,13 @@ func TestFurtherSplitLongWords(t *testing.T) {
 	}
 	tests := []test{
 		{[]string{"foo"}, 1, 8, []string{"foo"}},
-		{[]string{"foo"}, 1, 2, []string{"fo", "o"}},
+		{[]string{"foo"}, 1, 2, []string{"f", "o", "o"}},
 		{[]string{"foo"}, 0, 2, []string{"fo", "o"}},
-		{[]string{"foo", "bar"}, 3, 4, []string{"foo", "b", "a", "r"}},
-		{[]string{"foo", "bar"}, 2, 4, []string{"foo", "ba", "r"}},
+		{[]string{"foo", "bar"}, 3, 4, []string{"f", "o", "o", "b", "a", "r"}},
+		{[]string{"foo", "bar"}, 2, 4, []string{"fo", "o", "ba", "r"}},
 		{[]string{"foo", "bar"}, 3, 8, []string{"foo", "bar"}},
-		{[]string{"foo", "bar"}, 1, 2, []string{"fo", "o", "b", "a", "r"}},
-		{[]string{"fooo", "ba"}, 1, 2, []string{"fo", "o", "o", "b", "a"}},
+		{[]string{"foo", "bar"}, 1, 2, []string{"f", "o", "o", "b", "a", "r"}},
+		{[]string{"fooo", "ba"}, 1, 2, []string{"f", "o", "o", "o", "b", "a"}},
 	}
 	for i, testCase := range tests {
 		gotOut := furtherSplitLongWords(testCase.in, testCase.prefixWidth, testCase.lineWidth)

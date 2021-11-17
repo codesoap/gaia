@@ -20,16 +20,7 @@ func WrapToWidth(in, prefix string, width int) []string {
 	outLineWidth := 0
 	for _, word := range split {
 		wordWidth := runewidth.StringWidth(word)
-		if len(ret) == 0 {
-			if outLineWidth + wordWidth <= width {
-				outLine = append(outLine, word)
-				outLineWidth += 1 + wordWidth // 1 for the space.
-			} else {
-				ret = append(ret, strings.Join(outLine, " "))
-				outLine = []string{word}
-				outLineWidth = wordWidth
-			}
-		} else if prefixWidth + outLineWidth + wordWidth <= width {
+		if prefixWidth + outLineWidth + wordWidth <= width {
 			outLine = append(outLine, word)
 			outLineWidth += 1 + wordWidth // 1 for the space.
 		} else {
@@ -39,11 +30,7 @@ func WrapToWidth(in, prefix string, width int) []string {
 		}
 	}
 	if len(outLine) > 0 {
-		if len(ret) == 0 {
-			ret = append(ret, strings.Join(outLine, " "))
-		} else {
-			ret = append(ret, prefix+strings.Join(outLine, " "))
-		}
+		ret = append(ret, prefix+strings.Join(outLine, " "))
 	}
 	return ret
 }
@@ -56,26 +43,11 @@ func furtherSplitLongWords(words []string, prefixWidth, lineWidth int) []string 
 	} else if len(words) == 0 {
 		return words
 	}
-
-	// First word is special, because it does not get a prefix.
-	ret := furtherSplitLongFirstWord(words[0], prefixWidth, lineWidth)
-
-	for _, word := range words[1:] {
+	ret := []string{}
+	for _, word := range words {
 		ret = append(ret, furtherSplitLongWord(word, prefixWidth, lineWidth)...)
 	}
 	return ret
-}
-
-func furtherSplitLongFirstWord(word string, prefixWidth, lineWidth int) []string {
-	if runewidth.StringWidth(word) <= lineWidth {
-		return []string{word}
-	}
-	i := 2
-	for runewidth.StringWidth(word[:i]) <= lineWidth {
-		i++
-	}
-	ret := []string{word[:i-1]}
-	return append(ret, furtherSplitLongWord(word[i-1:], prefixWidth, lineWidth)...)
 }
 
 func furtherSplitLongWord(word string, prefixWidth, lineWidth int) []string {
