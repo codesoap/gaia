@@ -3,11 +3,16 @@ package wrap
 import (
 	"fmt"
 	"strings"
+	"unicode"
 
 	"github.com/mattn/go-runewidth"
 )
 
-// TODO: WrapWithPrefix
+// WrapWithPrefix wraps in so that none of the returned lines are longer
+// than width. prefix is added to the front of every returned line. It
+// will be attempted to break lines on whitespaces.
+//
+// All space runes will be replaced by 0x20 in the process.
 func WrapWithPrefix(in, prefix string, width int) []string {
 	prefixWidth := runewidth.StringWidth(prefix)
 	if prefixWidth >= width {
@@ -24,7 +29,10 @@ func WrapWithPrefix(in, prefix string, width int) []string {
 	return prefixedLines
 }
 
-// TODO: doc
+// Wrap wraps in so that none of the returned lines are longer than
+// width. It will be attempted to break lines on whitespaces.
+//
+// All space runes will be replaced by 0x20 in the process.
 func Wrap(in string, width int) []string {
 	ret := []string{}
 	split := strings.FieldsFunc(in, isSplitRune)
@@ -49,8 +57,8 @@ func Wrap(in string, width int) []string {
 }
 
 func isSplitRune(r rune) bool {
-	// TODO: improve
-	return r == ' ' || r == '\t'
+	// \u00A0 is NBSP
+	return r != '\u00A0' && unicode.IsSpace(r)
 }
 
 func splitLongWords(words []string, lineWidth int) []string {
