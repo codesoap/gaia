@@ -1,4 +1,4 @@
-module github.com/codesoap/vega
+module github.com/codesoap/gaia
 
 go 1.17
 

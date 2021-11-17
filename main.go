@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/codesoap/vega/gmi"
+	"github.com/codesoap/gaia/gmi"
 )
 
 type inputCleaner struct {

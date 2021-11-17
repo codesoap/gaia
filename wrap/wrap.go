@@ -13,7 +13,15 @@ func WrapWithPrefix(in, prefix string, width int) []string {
 	if prefixWidth >= width {
 		return []string{"..."}
 	}
-	return Wrap(in, width - prefixWidth) // FIXME
+	lines := Wrap(in, width - prefixWidth) // FIXME
+	if prefixWidth == 0 {
+		return lines
+	}
+	prefixedLines := make([]string, 0, len(lines))
+	for _, line := range lines {
+		prefixedLines = append(prefixedLines, prefix + line)
+	}
+	return prefixedLines
 }
 
 // TODO: doc
