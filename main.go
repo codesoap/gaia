@@ -80,9 +80,9 @@ func open(u *url.URL) error {
 			return err
 		}
 		page, err := gmi.ParsePage(scanner)
-		v := view.View{screen, page, 0}
+		v := view.View{screen, page, 3}
 		v.Draw()
-		time.Sleep(5_000_000_000)
+		time.Sleep(6_000_000_000)
 		screen.Fini()
 	case "3":
 		return fmt.Errorf("TODO: implement REDIRECT")

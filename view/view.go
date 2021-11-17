@@ -58,12 +58,16 @@ func wrapLine(in gmi.Line, width int) []string {
 		return wrap.Wrap(in.String(), width)
 	case gmi.PreformattedLine:
 		return []string{in.String()}
-	case gmi.ListLine, gmi.H1Line:
+	case gmi.H1Line:
 		return wrap.WrapWithPrefixAndIndent(in.String(), "# ", width)
-	case gmi.LinkLine, gmi.H2Line:
+	case gmi.H2Line:
 		return wrap.WrapWithPrefixAndIndent(in.String(), "## ", width)
 	case gmi.H3Line:
 		return wrap.WrapWithPrefixAndIndent(in.String(), "### ", width)
+	case gmi.LinkLine:
+		return wrap.WrapWithPrefixAndIndent(in.String(), "=> ", width)
+	case gmi.ListLine:
+		return wrap.WrapWithPrefixAndIndent(in.String(), "* ", width)
 	case gmi.QuoteLine:
 		return wrap.WrapWithPrefix(in.String(), "> ", width)
 	}
