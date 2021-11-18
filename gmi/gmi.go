@@ -19,7 +19,7 @@ func ParsePage(s *bufio.Scanner) (Page, error) {
 		raw := s.Text()
 		switch {
 		case len(raw) >= 2 && raw[:2] == "=>":
-			l, err := NewLinkLine(raw[2:])
+			l, err := NewLinkLine(raw)
 			if err != nil {
 				return p, err
 			}
@@ -75,7 +75,7 @@ func (l LinkLine) String() string {
 		return l.url.String()
 	}
 	if l.url.Scheme != "" && l.url.Scheme != "gemini" {
-		return fmt.Sprintf("=> [%s] %s", l.url.Scheme, l.name)
+		return fmt.Sprintf("[%s] %s", l.url.Scheme, l.name)
 	}
 	return l.name
 }

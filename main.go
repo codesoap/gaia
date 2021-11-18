@@ -71,6 +71,10 @@ func open(u *url.URL) error {
 	case "1":
 		return fmt.Errorf("TODO: implement INPUT")
 	case "2":
+		page, err := gmi.ParsePage(scanner)
+		if err != nil {
+			return err
+		}
 		encoding.Register()
 		screen, err := tcell.NewScreen()
 		if err != nil {
@@ -79,8 +83,7 @@ func open(u *url.URL) error {
 		if err = screen.Init(); err != nil {
 			return err
 		}
-		page, err := gmi.ParsePage(scanner)
-		v := view.View{screen, page, 3}
+		v := view.View{screen, page, 0}
 		v.Draw()
 		time.Sleep(6_000_000_000)
 		screen.Fini()
