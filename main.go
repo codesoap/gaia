@@ -85,7 +85,7 @@ func open(u *url.URL) error {
 		}
 		v := view.View{screen, page, 0}
 		v.Draw()
-		time.Sleep(6_000_000_000)
+		time.Sleep(20_000_000_000)
 		screen.Fini()
 	case "3":
 		return fmt.Errorf("TODO: implement REDIRECT")

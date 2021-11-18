@@ -14,16 +14,18 @@ var linkLineRegexp = regexp.MustCompile(`^=>[ \t]*([^ \t]+)(?:$|[ \t]+([^ \t].*)
 type Page []Line
 
 func ParsePage(s *bufio.Scanner) (Page, error) {
+	linkIndex := 0
 	p := Page{}
 	for s.Scan() {
 		raw := s.Text()
 		switch {
 		case len(raw) >= 2 && raw[:2] == "=>":
-			l, err := NewLinkLine(raw)
+			l, err := NewLinkLine(raw, linkIndex)
 			if err != nil {
 				return p, err
 			}
 			p = append(p, l)
+			linkIndex++
 		case len(raw) >= 3 && raw[:3] == "```":
 			for s.Scan() {
 				raw := s.Text()
@@ -57,17 +59,18 @@ type Line interface {
 }
 
 type LinkLine struct {
-	url  *url.URL
-	name string
+	url   *url.URL
+	name  string
+	index int
 }
 
-func NewLinkLine(raw string) (LinkLine, error) {
+func NewLinkLine(raw string, index int) (LinkLine, error) {
 	submatches := linkLineRegexp.FindStringSubmatch(raw)
 	if len(submatches) != 3 {
 		return LinkLine{}, fmt.Errorf("line does not match specification", raw)
 	}
 	url, err := url.Parse(submatches[1])
-	return LinkLine{url: url, name: submatches[2]}, err
+	return LinkLine{url: url, name: submatches[2], index: index}, err
 }
 
 func (l LinkLine) String() string {
@@ -75,9 +78,9 @@ func (l LinkLine) String() string {
 		return l.url.String()
 	}
 	if l.url.Scheme != "" && l.url.Scheme != "gemini" {
-		return fmt.Sprintf("[%s] %s", l.url.Scheme, l.name)
+		return fmt.Sprintf("#%d [%s] %s", l.index, l.url.Scheme, l.name)
 	}
-	return l.name
+	return fmt.Sprintf("#%d %s", l.index, l.name)
 }
 
 type TextLine struct{ raw string }
