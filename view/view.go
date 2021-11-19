@@ -10,7 +10,6 @@ import (
 )
 
 type View struct {
-	Screen      tcell.Screen
 	Page        gmi.Page
 	CurrentLine int // output line number (may be higher than input line number because of wrapping)
 	// TODO: Highlight string
@@ -31,9 +30,9 @@ func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
 }
 
 // Scrolling to a output line number sucks when resizing...
-func (v View) Draw() {
-	v.Screen.Clear()
-	screenWidth, screenHeight := v.Screen.Size()
+func (v View) Draw(screen tcell.Screen) {
+	screen.Clear()
+	screenWidth, screenHeight := screen.Size()
 	passedLines := 0
 	wrapWidth := 72
 	if screenWidth < wrapWidth {
@@ -42,14 +41,14 @@ func (v View) Draw() {
 	for _, line := range v.Page {
 		for _, outLine := range wrapLine(line, wrapWidth) {
 			startScreenRow := passedLines - v.CurrentLine // FIXME?!
-			emitStr(v.Screen, 0, startScreenRow, tcell.StyleDefault, outLine)
+			emitStr(screen, 0, startScreenRow, tcell.StyleDefault, outLine)
 			passedLines++
 		}
 		if passedLines >= v.CurrentLine+screenHeight {
 			break // Don't try to draw below-screen content.
 		}
 	}
-	v.Screen.Show()
+	screen.Show()
 }
 
 func wrapLine(in gmi.Line, width int) []string {

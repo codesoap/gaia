@@ -16,7 +16,11 @@ import (
 	"github.com/gdamore/tcell/v2/encoding"
 )
 
-var screen tcell.Screen
+type state struct {
+	screen      tcell.Screen
+	url *url.URL
+	view view.View
+}
 
 type inputCleaner struct {
 	io.ReadCloser
@@ -50,7 +54,7 @@ func main() {
 	}
 
 	encoding.Register()
-	screen, err = tcell.NewScreen()
+	screen, err := tcell.NewScreen()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Could not start tcell: %v\n", err)
 		os.Exit(2)
@@ -59,17 +63,44 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Could not start tcell: %v\n", err)
 		os.Exit(2)
 	}
-	defer screen.Fini()
 
-	if err = open(u); err != nil {
+	s := state{screen: screen, url: u}
+	if err = s.loadURL(); err != nil {
 		screen.Fini()
 		fmt.Fprintf(os.Stderr, "Could not open URL: %v\n", err)
 		os.Exit(3)
 	}
+	if err = s.runEventLoop(); err != nil {
+		screen.Fini()
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(4)
+	}
+	screen.Fini()
+	fmt.Println(s.url) // TODO: Cut out port if standard.
 }
 
-func open(u *url.URL) error {
-	conn, err := get(u)
+func (s *state) runEventLoop() error {
+	for {
+		switch ev := s.screen.PollEvent().(type) {
+		case *tcell.EventResize:
+			s.screen.Sync()
+			s.view.Draw(s.screen)
+		case *tcell.EventKey:
+			if ev.Key() == tcell.KeyEscape {
+				return nil
+			} else if ev.Key() == tcell.KeyRune && ev.Rune() == 'j' {
+				s.view.CurrentLine++
+				s.view.Draw(s.screen)
+			} else if ev.Key() == tcell.KeyRune && ev.Rune() == 'k' {
+				s.view.CurrentLine--
+				s.view.Draw(s.screen)
+			}
+		}
+	}
+}
+
+func (s *state) loadURL() error {
+	conn, err := get(s.url)
 	if err != nil {
 		return err
 	}
@@ -90,24 +121,7 @@ func open(u *url.URL) error {
 		if err != nil {
 			return err
 		}
-		v := view.View{screen, page, 0}
-		for {
-			switch ev := screen.PollEvent().(type) {
-			case *tcell.EventResize:
-				screen.Sync()
-				v.Draw()
-			case *tcell.EventKey:
-				if ev.Key() == tcell.KeyEscape {
-					return nil
-				} else if ev.Key() == tcell.KeyRune && ev.Rune() == 'j' {
-					v.CurrentLine++
-					v.Draw()
-				} else if ev.Key() == tcell.KeyRune && ev.Rune() == 'k' {
-					v.CurrentLine--
-					v.Draw()
-				}
-			}
-		}
+		s.view = view.View{page, 0}
 	case "3":
 		return fmt.Errorf("TODO: implement REDIRECT")
 	case "4":
