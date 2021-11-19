@@ -9,13 +9,14 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/codesoap/gaia/gmi"
 	"github.com/codesoap/gaia/view"
 	"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2/encoding"
 )
+
+var screen tcell.Screen
 
 type inputCleaner struct {
 	io.ReadCloser
@@ -47,9 +48,23 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Could not get URL: %v\n", err)
 		os.Exit(1)
 	}
-	if err = open(u); err != nil {
-		fmt.Fprintf(os.Stderr, "Could not open URL: %v\n", err)
+
+	encoding.Register()
+	screen, err = tcell.NewScreen()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Could not start tcell: %v\n", err)
 		os.Exit(2)
+	}
+	if err = screen.Init(); err != nil {
+		fmt.Fprintf(os.Stderr, "Could not start tcell: %v\n", err)
+		os.Exit(2)
+	}
+	defer screen.Fini()
+
+	if err = open(u); err != nil {
+		screen.Fini()
+		fmt.Fprintf(os.Stderr, "Could not open URL: %v\n", err)
+		os.Exit(3)
 	}
 }
 
@@ -75,18 +90,24 @@ func open(u *url.URL) error {
 		if err != nil {
 			return err
 		}
-		encoding.Register()
-		screen, err := tcell.NewScreen()
-		if err != nil {
-			return err
-		}
-		if err = screen.Init(); err != nil {
-			return err
-		}
 		v := view.View{screen, page, 0}
-		v.Draw()
-		time.Sleep(20_000_000_000)
-		screen.Fini()
+		for {
+			switch ev := screen.PollEvent().(type) {
+			case *tcell.EventResize:
+				screen.Sync()
+				v.Draw()
+			case *tcell.EventKey:
+				if ev.Key() == tcell.KeyEscape {
+					return nil
+				} else if ev.Key() == tcell.KeyRune && ev.Rune() == 'j' {
+					v.CurrentLine++
+					v.Draw()
+				} else if ev.Key() == tcell.KeyRune && ev.Rune() == 'k' {
+					v.CurrentLine--
+					v.Draw()
+				}
+			}
+		}
 	case "3":
 		return fmt.Errorf("TODO: implement REDIRECT")
 	case "4":
@@ -139,16 +160,13 @@ func getURL() (*url.URL, error) {
 }
 
 func verifyServersCert(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
-	for _, rawCert := range rawCerts {
-		cert, err := x509.ParseCertificate(rawCert)
-		if err != nil {
-			return err
-		}
-		fmt.Println("NotBefore         :", cert.NotBefore.String())
-		fmt.Println("NotAfter          :", cert.NotAfter.String())
-		fmt.Println("Subject           :", cert.Subject)
-		fmt.Println("SignatureAlgorithm:", cert.SignatureAlgorithm)
-		return nil
-	}
-	return fmt.Errorf("could not find trusted certificate")
+	// for _, rawCert := range rawCerts {
+	// 	cert, err := x509.ParseCertificate(rawCert)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	return nil
+	// }
+	// return fmt.Errorf("could not find trusted certificate")
+	return nil
 }
