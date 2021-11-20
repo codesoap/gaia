@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/codesoap/gaia/client"
+	"github.com/codesoap/gaia/gclient"
 	"github.com/codesoap/gaia/gmi"
-	"github.com/codesoap/gaia/view"
+	"github.com/codesoap/gaia/gview"
 	"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2/encoding"
 )
@@ -17,7 +17,7 @@ import (
 type state struct {
 	screen tcell.Screen
 	url    *url.URL
-	view   view.View
+	view   gview.View
 }
 
 func main() {
@@ -74,7 +74,7 @@ func (s *state) runEventLoop() error {
 }
 
 func (s *state) loadURL() error {
-	c, err := client.NewClient(s.url)
+	c, err := gclient.NewClient(s.url)
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func (s *state) loadURL() error {
 		if err != nil {
 			return err
 		}
-		s.view = view.View{page, 0}
+		s.view = gview.View{page, 0}
 	case "3":
 		return fmt.Errorf("TODO: implement REDIRECT")
 	case "4":
