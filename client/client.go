@@ -3,7 +3,6 @@ package client
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"io"
 	"net/url"
 )
@@ -15,6 +14,7 @@ import (
 type Client struct {
 	url  *url.URL
 	conn *tls.Conn
+	cert *x509.Certificate
 }
 
 func (c *Client) Close() error {
@@ -23,41 +23,23 @@ func (c *Client) Close() error {
 
 // NewClient connects to the host of u and returns a new client with
 // this connection.
-//
-// ErrUnknownServerCertificate will be returned, if the servers
-// certificate is unknown.
 func NewClient(u *url.URL) (*Client, error) {
-	conf := &tls.Config{
-		InsecureSkipVerify:    true,
-		VerifyPeerCertificate: verifyServersCert,
-	}
+	conf := &tls.Config{InsecureSkipVerify: true}
 	conn, err := tls.Dial("tcp", u.Host, conf)
 	if err != nil {
 		return nil, err
 	}
-	return &Client{url: u, conn: conn}, nil
+	state := conn.ConnectionState()
+
+	// Only the used leaf certificate is of interest; it has index 0:
+	relevantCert := state.PeerCertificates[0]
+
+	return &Client{url: u, conn: conn, cert: relevantCert}, err
 }
 
+// Get requests the resource of c from the connected host. Before doing
+// that, c.Certificate() should be checked for validity.
 func (c *Client) Get() (io.ReadCloser, error) {
 	_, err := c.conn.Write([]byte(c.url.String() + "\r\n"))
 	return inputCleaner{c.conn}, err
-}
-
-func verifyServersCert(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
-	// The first received certificate is used, others are discarded.
-	if len(rawCerts) > 0 {
-		cert, err := x509.ParseCertificate(rawCerts[0])
-		if err != nil {
-			return err
-		}
-		if isKnownCertificate(cert) {
-			return nil
-		}
-		return ErrUnknownServerCertificate{cert}
-	}
-	return fmt.Errorf("could not find trusted certificate")
-}
-
-func isKnownCertificate(cert *x509.Certificate) bool {
-	return true // FIXME
 }
