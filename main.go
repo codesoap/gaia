@@ -74,12 +74,12 @@ func (s *state) runEventLoop() error {
 }
 
 func (s *state) loadURL() error {
-	c, err := gclient.NewClient(s.url)
+	client, err := gclient.NewClient(s.url)
 	if err != nil {
 		return err
 	}
-	defer c.Close()
-	conn, err := c.Get()
+	defer client.Close()
+	conn, err := client.Get()
 	if err != nil {
 		return err
 	}

@@ -53,7 +53,7 @@ func (c *Client) Get() (io.ReadCloser, error) {
 	return inputCleaner{c.conn}, err
 }
 
-func IsKnownServerCertificate(cert *x509.Certificate) (bool, error) {
+func IsKnownHost(cert *x509.Certificate) (bool, error) {
 	// TODO
 	return false, nil
 }

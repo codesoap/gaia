@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/codesoap/gaia/gmi"
-	"github.com/codesoap/gaia/wrap"
+	"github.com/codesoap/gaia/gwrap"
 	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
 )
@@ -54,21 +54,21 @@ func (v View) Draw(screen tcell.Screen) {
 func wrapLine(in gmi.Line, width int) []string {
 	switch in.(type) {
 	case gmi.TextLine:
-		return wrap.Wrap(in.String(), width)
+		return gwrap.Wrap(in.String(), width)
 	case gmi.PreformattedLine:
 		return []string{in.String()}
 	case gmi.H1Line:
-		return wrap.WrapWithPrefixAndIndent(in.String(), "# ", width)
+		return gwrap.WrapWithPrefixAndIndent(in.String(), "# ", width)
 	case gmi.H2Line:
-		return wrap.WrapWithPrefixAndIndent(in.String(), "## ", width)
+		return gwrap.WrapWithPrefixAndIndent(in.String(), "## ", width)
 	case gmi.H3Line:
-		return wrap.WrapWithPrefixAndIndent(in.String(), "### ", width)
+		return gwrap.WrapWithPrefixAndIndent(in.String(), "### ", width)
 	case gmi.LinkLine:
-		return wrap.WrapWithPrefixAndIndent(in.String(), "=> ", width)
+		return gwrap.WrapWithPrefixAndIndent(in.String(), "=> ", width)
 	case gmi.ListLine:
-		return wrap.WrapWithPrefixAndIndent(in.String(), "* ", width)
+		return gwrap.WrapWithPrefixAndIndent(in.String(), "* ", width)
 	case gmi.QuoteLine:
-		return wrap.WrapWithPrefix(in.String(), "> ", width)
+		return gwrap.WrapWithPrefix(in.String(), "> ", width)
 	}
 	panic(fmt.Errorf("unknown Line type"))
 }
