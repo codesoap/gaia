@@ -2,14 +2,12 @@ package main
 
 import (
 	"bufio"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"io"
 	"net/url"
 	"os"
 	"strings"
 
+	"github.com/codesoap/gaia/client"
 	"github.com/codesoap/gaia/gmi"
 	"github.com/codesoap/gaia/view"
 	"github.com/gdamore/tcell/v2"
@@ -17,33 +15,9 @@ import (
 )
 
 type state struct {
-	screen      tcell.Screen
-	url *url.URL
-	view view.View
-}
-
-type inputCleaner struct {
-	io.ReadCloser
-}
-
-func (c inputCleaner) Read(p []byte) (n int, err error) {
-	// Replacing with '�' instead of '?' would be nice, but woud be a lot
-	// more complicated, since '�' consists of two bytes.
-
-	origP := make([]byte, len(p))
-	n, err = c.ReadCloser.Read(origP)
-	for i := 0; i < n; i++ {
-		if isUnwantedControlChar(origP[i]) {
-			p[i] = '?'
-		} else {
-			p[i] = origP[i]
-		}
-	}
-	return
-}
-
-func isUnwantedControlChar(b byte) bool {
-	return b != '\t' && b != '\r' && b != '\n' && b < 32
+	screen tcell.Screen
+	url    *url.URL
+	view   view.View
 }
 
 func main() {
@@ -100,11 +74,15 @@ func (s *state) runEventLoop() error {
 }
 
 func (s *state) loadURL() error {
-	conn, err := get(s.url)
+	c, err := client.NewClient(s.url)
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer c.Close()
+	conn, err := c.Get()
+	if err != nil {
+		return err
+	}
 	scanner := bufio.NewScanner(conn)
 	if !scanner.Scan() {
 		return fmt.Errorf("could not read header")
@@ -134,21 +112,6 @@ func (s *state) loadURL() error {
 	return nil
 }
 
-func get(u *url.URL) (io.ReadCloser, error) {
-	conf := &tls.Config{
-		InsecureSkipVerify:    true,
-		VerifyPeerCertificate: verifyServersCert,
-	}
-	conn, err := tls.Dial("tcp", u.Host, conf)
-	if err != nil {
-		return nil, err
-	}
-	if _, err = conn.Write([]byte(u.String() + "\r\n")); err != nil {
-		conn.Close()
-	}
-	return inputCleaner{conn}, err
-}
-
 func getURL() (*url.URL, error) {
 	if len(os.Args) != 2 {
 		return &url.URL{}, fmt.Errorf("wrong argument count") // TODO: help text
@@ -171,16 +134,4 @@ func getURL() (*url.URL, error) {
 		u.Host += ":1965"
 	}
 	return u, nil
-}
-
-func verifyServersCert(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
-	// for _, rawCert := range rawCerts {
-	// 	cert, err := x509.ParseCertificate(rawCert)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	return nil
-	// }
-	// return fmt.Errorf("could not find trusted certificate")
-	return nil
 }
